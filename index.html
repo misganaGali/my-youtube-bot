@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Maintenance Self-Test</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #004494;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --box-bg: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--box-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Home Page Styles */
+        .exam-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Quiz Page Styles */
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .progress {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background-color: #f8f9fa;
+            border: 2px solid #ddd;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .option:hover {
+            background-color: #e2e6ea;
+            border-color: #ccc;
+        }
+
+        .option.selected {
+            background-color: #dbeafe;
+            border-color: var(--primary-color);
+        }
+
+        .option.correct {
+            background-color: #d4edda;
+            border-color: var(--correct-color);
+            color: #155724;
+        }
+
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: var(--incorrect-color);
+            color: #721c24;
+        }
+
+        .explanation {
+            background-color: #e2e3e5;
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+            font-size: 16px;
+        }
+
+        .amharic {
+            font-family: 'Nyala', 'Noto Sans Ethiopic', sans-serif;
+            font-size: 18px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Results Page Styles */
+        .results-container {
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Home Page -->
+        <div id="home-page">
+            <h1>Aviation Maintenance Self-Test</h1>
+            <p style="text-align: center;">Select a module to begin your self-test. Detailed explanations will be provided in Amharic.</p>
+            <div class="exam-list" id="exam-list-container">
+                <!-- Exam buttons will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quiz-page" class="hidden">
+            <div class="header-controls">
+                <button class="btn" style="background-color: #6c757d;" onclick="backToHome()">Back to Exams</button>
+                <div class="progress" id="progress-indicator">Question 1 of X</div>
+            </div>
+            
+            <h2 id="quiz-title">Exam Title</h2>
+            <div class="question-text" id="question-text">Question goes here?</div>
+            
+            <div class="options" id="options-container">
+                <!-- Options injected here via JS -->
+            </div>
+
+            <div id="explanation-container" class="explanation hidden">
+                <strong>Explanation (ማብራሪያ):</strong>
+                <p id="explanation-text" class="amharic"></p>
+            </div>
+
+            <div class="controls">
+                <button class="btn" id="submit-btn" onclick="submitAnswer()">Submit Answer</button>
+                <button class="btn hidden" id="next-btn" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <!-- Results Page -->
+        <div id="result-page" class="hidden">
+            <h1>Exam Completed!</h1>
+            <div class="results-container">
+                <p>Your Final Score:</p>
+                <div class="score-display" id="final-score">0 / 0</div>
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px;">
+                    <button class="btn" onclick="restartExam()">Restart Current Exam</button>
+                    <button class="btn" style="background-color: #6c757d;" onclick="backToHome()">Back to Exams</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database of all exams, questions, and Amharic explanations
+        const examsData =[
+            {
+                title: "Exam 1: PP02 M3 (35 Questions)",
+                questions:[
+                    {
+                        q: "Where is the location of the Thrust lever and the Start lever?",
+                        options:["In the cockpit", "On the engine", "In the E and E compartment", "In the cabin"],
+                        correct: 0,
+                        exp: "የጉልበት ማዘዣ (Thrust lever) እና የማስነሻ ማዘዣ (Start lever) አብራሪዎች ሞተሩን የሚቆጣጠሩባቸው ስለሆኑ የሚገኙት በአብራሪው ክፍል (Cockpit) ውስጥ ነው።"
+                    },
+                    {
+                        q: "How many positions does the start lever have?",
+                        options: ["Two", "Three", "One", "Four"],
+                        correct: 0,
+                        exp: "በአብዛኛው ዘመናዊ አውሮፕላኖች ላይ የ Start lever ሁለት ቦታዎች (positions) አሉት፡ IDLE (ነዳጅ ክፍት) እና CUTOFF (ነዳጅ ዝግ)።"
+                    },
+                    {
+                        q: "In the Ignition system, the ____ transforms the input voltage to a pulsed high-voltage output through solid-state circuitry, transformers, and diodes.",
+                        options: ["Exciter BOX", "Igniter Plug", "Ignition Lead", "Capacitor"],
+                        correct: 0,
+                        exp: "ኤክሳይተር ቦክስ (Exciter box) የኤሌክትሪክ ኃይልን ተቀብሎ ወደ እጅግ ከፍተኛ ቮልቴጅ በመቀየር ለፕለጉ (igniter) የሚያቀብል የሲስተሙ ልብ ነው።"
+                    },
+                    {
+                        q: "Which sentence describes the term flameout?",
+                        options:["When the fire unintentionally goes out", "Improper fuel ignition mixture", "Restricting ignition", "Normal engine shutdown"],
+                        correct: 0,
+                        exp: "ፍሌም-አውት (Flameout) ማለት ሞተሩ እየሰራ እያለ በድንገት እና ካልታሰበበት ሁኔታ እሳቱ ሲጠፋ የሚፈጠር አደገኛ ክስተት ነው።"
+                    },
+                    {
+                        q: "You check for weak battery and recharge the battery as a remedy when troubleshooting in the ignition system when there is:",
+                        options:["Long interval between the sparks", "No igniter spark when the system is ON", "Continuous sparks", "Cracked ceramic insulation"],
+                        correct: 0,
+                        exp: "በባህሪው ባትሪው ሲደክም የማቀጣጠያው ኃይል (Voltage) ለማከማቸት ረጅም ጊዜ ስለሚወስድበት በብልጭታዎቹ መካከል ያለው የጊዜ ልዩነት (Long interval) ይረዝማል።"
+                    },
+                    {
+                        q: "Weak spark can be created due to:",
+                        options:["Cracked ceramic insulation", "Hot electrode erosion", "Incorrect power input to the transformer unit", "Loose battery connection"],
+                        correct: 0,
+                        exp: "በኢግኒተር ፕለጉ ላይ ያለው የሴራሚክ መከላከያ (Ceramic insulation) ከተሰነጠቀ፣ የኤሌክትሪክ ኃይሉ በትክክል ሳይደርስ ስለሚባክን ደካማ ብልጭታ (Weak spark) ይፈጠራል።"
+                    },
+                    {
+                        q: "When starting an engine which one comes first?",
+                        options: ["Rotating the engine", "Ignition", "Fuel", "Starter disconnect"],
+                        correct: 0,
+                        exp: "ሞተር ሲነሳ ቅደም ተከተሉ መጀመሪያ አየር እንዲገባ ሞተሩን ማሽከርከር (Rotating)、 በመቀጠል ማቀጣጠል (Ignition)、 ከዚያም ነዳጅ (Fuel) መክፈት ነው።"
+                    },
+                    {
+                        q: "When starting an engine which one comes last?",
+                        options: ["Starter disconnect", "Fuel cutoff", "Ignition de-energies", "Rotating the engine"],
+                        correct: 0,
+                        exp: "ሞተሩ ራሱን ችሎ ነዳጅ እያቃጠለ መቆም ሲችል፣ በመጨረሻ የሚከናወነው ሒደት ማስነሻው (Starter) ራሱን ከሞተሩ ማላቀቅ (Disconnect) ነው።"
+                    },
+                    {
+                        q: "The air turbine starter used in most gas turbine engines is protected from attaining too high speed if the ratchet should fail to release the clutch by:",
+                        options:["Drive shaft shear section", "Dual stage reduction gear", "Clutch pawl leaf spring", "Pressure regulating valve"],
+                        correct: 0,
+                        exp: "ክላቹ ሳይላቀቅ ቀርቶ ሞተሩ ስታርተሩን በከፍተኛ ፍጥነት ቢያሽከረክረው ስታርተሩ እንዳይፈነዳ ብሎ የተሰራው ዘንግ (Shear section) ራሱን ቆርጦ ያድነዋል።"
+                    },
+                    {
+                        q: "During engine starting, at which percentage of N2 the starter disengages?",
+                        options:["55% of N2", "30% of N1", "60% of N1", "45% of N2"],
+                        correct: 0,
+                        exp: "ሞተሩ ራሱን ሲችል የውስጠኛው ሞተር (N2) ፍጥነት ከ 50% እስከ 55% ሲደርስ ማስነሻው (Starter) ራሱን ያላቅቃል።"
+                    },
+                    {
+                        q: "Which starter is used for small gas turbine engine?",
+                        options:["Electrical motor", "Air impingement starter", "Gas turbine starter", "Cartridge starter"],
+                        correct: 0,
+                        exp: "ለትናንሽ የጋዝ ተርባይን ሞተሮች (ለምሳሌ APU) ክብደታቸው ቀላል የሆኑ የኤሌክትሪክ ማስነሻ ሞተሮች (Electrical motors) ይመረጣሉ።"
+                    },
+                    {
+                        q: "The winding in the starter-generator is used to develop the low-speed, high starting torque necessary to crank the engine:",
+                        options:["Series", "Shunt", "Both", "Parallel"],
+                        correct: 0,
+                        exp: "በስታርተር-ጄኔሬተር ውስጥ 'Series' ጠምዛዛዎች (Windings) ሞተሩን ለማስነሳት የሚያስፈልገውን ከፍተኛ ጉልበት (High starting torque) ለማምረት ያገለግላሉ።"
+                    },
+                    {
+                        q: "An air turbine starter used in most gas turbine engines requires compressed air with:",
+                        options:["A large Volume and Low pressure", "Small volume and low pressure", "A large Volume and high pressure", "Small volume and high pressure"],
+                        correct: 0,
+                        exp: "የአየር ተርባይን ማስነሻ በተፈጥሮው ትልቅ የአየር መጠን (Large Volume) ነገር ግን ዝቅተኛ ግፊት (Low pressure - ከ30-50 psi) ይፈልጋል።"
+                    },
+                    {
+                        q: "Which of the following is the most widely used starter?",
+                        options:["Air turbine starter", "Cartridge starter", "Air impingement starter", "Electrical motor"],
+                        correct: 0,
+                        exp: "በትላልቅ የንግድ አውሮፕላኖች ላይ በብዛት ጥቅም ላይ የሚውለው አነስተኛ ክብደት ኖሮት ከፍተኛ ጉልበት የሚያመነጨው የአየር ተርባይን ማስነሻ (Air Turbine Starter) ነው።"
+                    },
+                    {
+                        q: "Why do we need to connect starter at the N2 on dual spool engine?",
+                        options:["Less weight to start", "Easy for connecting the starter", "Closer to the combustion chamber", "Provides more airflow"],
+                        correct: 0,
+                        exp: "የውስጠኛውን (N2) ሞተር ብቻ ማሽከርከር ቀላል እና አነስተኛ ክብደት (Less weight to start) ስለሚኖረው፣ አነስተኛ ኃይል በመጠቀም ሞተሩን ለማስነሳት ይረዳል።"
+                    },
+                    {
+                        q: "In troubleshooting, when there is a weak spark on the sparks:",
+                        options:["Igniter plug", "Power supply", "Transformer Unit", "Exciter box"],
+                        correct: 0,
+                        exp: "ደካማ ብልጭታ (Weak spark) ብዙውን ጊዜ የሚፈጠረው የኢግኒተር ፕለጉ (Igniter plug) የሴራሚክ መከላከያ ሲሰነጠቅ ወይም ሲያረጅ ነው።"
+                    },
+                    {
+                        q: "Which type of starter withstand high temperature with burning solid propellant?",
+                        options:["Cartridge/pneumatic starter", "Air turbine starter", "Electrical motor", "Air impingement starter"],
+                        correct: 0,
+                        exp: "ካርትሪጅ (Cartridge) ስታርተር ልክ እንደ ጥይት ደረቅ ነዳጅ አቃጥሎ በሚያመነጨው ትኩስ ጋዝ የሚሰራ የማስነሻ ዓይነት ነው።"
+                    },
+                    {
+                        q: "Primary purpose of APU:",
+                        options:["Provide pneumatic power", "Provide thrust", "Cool the engine", "Provide hydraulic power"],
+                        correct: 0,
+                        exp: "የ APU ዋነኛ ዓላማ አውሮፕላኑ መሬት ላይ እያለ የአየር ኃይል (Pneumatic power) በማቅረብ ዋና ዋና ሞተሮችን ማስነሳት ነው።"
+                    },
+                    {
+                        q: "AVM unit test bite is done on:",
+                        options:["Unit itself", "EICAS display", "Primary flight display", "Engine control panel"],
+                        correct: 0,
+                        exp: "የንዝረት መለኪያ (AVM) ጤንነቱን የሚመረምረው BITE (Built-In Test Equipment) በራሱ በመሣሪያው (Unit itself) ላይ ይከናወናል።"
+                    },
+                    {
+                        q: "What senses compressor turbine speed?",
+                        options:["Tachometer", "AVM", "EGT sensor", "EPR probe"],
+                        correct: 0,
+                        exp: "የሞተርን የማሽከርከር ፍጥነት (RPM) የሚለካው እና ወደ ስክሪን የሚያስተላልፈው መሣሪያ ታኮሜትር (Tachometer) ይባላል።"
+                    },
+                    {
+                        q: "What changes the forward and reverse motion of thrust lever into analog electrical signal?",
+                        options:["Resolver", "Bellcrank", "Push-pull rod", "Pulley"],
+                        correct: 0,
+                        exp: "በዘመናዊ የሞተር መቆጣጠሪያዎች (FADEC) ላይ የThrust leverን እንቅስቃሴ ወደ ኤሌክትሪክ መልዕክት (Analog signal) የሚቀይረው 'Resolver' (ሪዞልቨር) ነው።"
+                    },
+                    {
+                        q: "What prevents simultaneous movement of forward and reverse thrust levers?",
+                        options:["Interlock mechanism", "Thrust control drum", "Brake drum", "Detent catch"],
+                        correct: 0,
+                        exp: "አብራሪው ወደ ፊት (Forward) እና ወደ ኋላ (Reverse) የሚያስኬዱትን የጉልበት ማዘዣዎች በአንድ ጊዜ እንዳይጠቀም የሚቆልፈው Interlock mechanism ነው።"
+                    },
+                    {
+                        q: "Which of following doesn’t give information to the AVM?",
+                        options:["EGT", "Number 1 bearing vibration sensor", "Fan frame compressor case vertical vibration sensor", "Turbine vibration sensor"],
+                        correct: 0,
+                        exp: "EGT የሙቀት መጠን መለኪያ (Exhaust Gas Temperature) እንጂ ንዝረትን (Vibration) አይለካም፤ ስለዚህ ለ AVM መረጃ አይሰጥም።"
+                    },
+                    {
+                        q: "EPR ratio is:",
+                        options:["Outlet air to inlet air", "Inlet air to outlet air", "Compressor air to turbine air", "Bypass air to core air"],
+                        correct: 0,
+                        exp: "EPR (Engine Pressure Ratio) ማለት ከሞተሩ የሚወጣው ግፊት (Outlet pressure) ለሞተሩ ከሚገባው ግፊት (Inlet pressure) ጋር ሲካፈል የሚመጣው የኃይል (Thrust) መለኪያ ነው።"
+                    },
+                    {
+                        q: "Simplest engine starter type:",
+                        options:["Turbine impingement starter", "Air turbine starter", "Cartridge starter", "Starter generator"],
+                        correct: 0,
+                        exp: "ምንም ዓይነት የውስጥ ጊሮች ሳይኖሩት፣ አየርን በቀጥታ በተርባይኑ ብሌዶች ላይ በመርጨት የሚያስነሳው (Impingement starter) በጣም ቀላል አሠራር ያለው ነው።"
+                    },
+                    {
+                        q: "What will be function of starter generator after cranking the engine?",
+                        options: ["As generator", "As starter", "As exciter", "As ignition source"],
+                        correct: 0,
+                        exp: "ስታርተር-ጄኔሬተር መጀመሪያ ሞተሩን ያስነሳል፣ አንዴ ሞተሩ ከነቃ በኋላ ደግሞ እንደ ጄኔሬተር (Generator) ሆኖ ለአውሮፕላኑ ኤሌክትሪክ ያመነጫል።"
+                    },
+                    {
+                        q: "Continuous duty ignition system:",
+                        options:["Has no operating limit", "Allows operation for two minutes", "Used only for starting", "Requires 20 minutes cooling"],
+                        correct: 0,
+                        exp: "የማያቋርጥ ማቀጣጠያ (Continuous-duty ignition) በደጋፊ አየር ስለሚቀዘቅዝ፣ አየር ላይ ሞተር እንዳይጠፋ ያለ ምንም የጊዜ ገደብ (No operating limit) ሊሰራ ይችላል።"
+                    },
+                    {
+                        q: "Which spool crank 1st during starting on dual spool engine?",
+                        options:["N2 spool", "N1 spool", "Both spools", "HP turbine"],
+                        correct: 0,
+                        exp: "ክብደትን ለመቀነስ ሲባል ማስነሻው (Starter) የሚያሽከረክረው የውስጠኛውን ከፍተኛ ግፊት ዘንግ (N2 spool) ብቻ ነው።"
+                    },
+                    {
+                        q: "What is the purpose of overrunning clutch?",
+                        options:["Disengage the starter when engine starts", "Engage the starter when engine starts", "Regulate air pressure", "Prevent overspeed"],
+                        correct: 0,
+                        exp: "የሞተሩ ፍጥነት ከማስነሻው ፍጥነት ሲበልጥ፣ ክላቹ (Overrunning clutch) ራሱን በማላቀቅ ማስነሻውን ከመሰበር ያድነዋል። (ማስታወሻ፡ በጥያቄው ውስጥ የተቀመጠው አማራጭ engage ቢልም፣ ትክክለኛው ተግባር ሞተሩ ሲነሳ ማስነሻውን ከጥፋት መጠበቅ/ማላቀቅ ነው)።"
+                    },
+                    {
+                        q: "Which actuator control switch energizes ignition system?",
+                        options:["Start lever", "Thrust lever", "Fire switch", "Auto-ignition switch"],
+                        correct: 0,
+                        exp: "የሞተር ማስነሻ ማዘዣ (Start lever) ወደ IDLE ቦታ ሲደረግ የነዳጅ እና የማቀጣጠያ (Ignition) ዑደቶችን ይከፍታል።"
+                    },
+                    {
+                        q: "Not true regarding igniter plug maintenance:",
+                        options:["Uses metal brush for cleaning for clean insulation well and contact", "Replace if chipped", "Check for proper clearance", "Perform continuity check"],
+                        correct: 0,
+                        exp: "ኢግኒተር ፕለግን በብረት ብሩሽ (Metal brush) ማጽዳት ፍፁም ስህተት ነው። ምክንያቱም ጫፉ ላይ ያለውን ጠቃሚ ሴራሚክ/ሴሚኮንዳክተር ይልጠዋል/ያበላሸዋል።"
+                    },
+                    {
+                        q: "If air starter spins but doesn’t crank engine, the problem:",
+                        options:["Bad overrunning clutch", "Sheared drive shaft", "Low air pressure", "Defective start valve"],
+                        correct: 0,
+                        exp: "ስታርተሩ ራሱ እየሾረ ሞተሩን የማያዞረው ከሆነ፣ ጉልበት የሚያስተላልፈው ክላች (Overrunning clutch) ተበላሽቷል ወይም ሸርቷል ማለት ነው።"
+                    }
+                ]
+            },
+            {
+                title: "Exam 2: Gas Turbine Engine Starting & Ignition Systems",
+                questions:[
+                    {
+                        q: "What will be the position of starter valve, if the engine start switch is on the GRD position?",
+                        options: ["Open", "Closed", "Partially closed", "Auto"],
+                        correct: 0,
+                        exp: "ማብሪያው Ground (GRD) ላይ ሲደረግ፣ ሞተሩን ለማስነሳት አየር እንዲገባ የማስነሻ ቫልቭ (Starter Valve) ክፍት (Open) ይሆናል።"
+                    },
+                    {
+                        q: "Most common method of securing air starter on accessary gear box is:",
+                        options: ["QAD coupling", "Bolts and nuts", "Screws", "Clamps"],
+                        correct: 0,
+                        exp: "ለማንሳት እና ለመግጠም ቀላል እንዲሆን፣ የአየር ማስነሻዎች በአብዛኛው በ QAD (Quick Attach-Detach) ካፕሊንግ ይታሰራሉ።"
+                    },
+                    {
+                        q: "Which of the following is the most widely used starter?",
+                        options:["Air turbine starter", "Cartridge starter", "Air impingement starter", "Electrical motor"],
+                        correct: 0,
+                        exp: "በትላልቅ የንግድ አውሮፕላኖች ላይ በብዛት ጥቅም ላይ የሚውለው አነስተኛ ክብደት ኖሮት ከፍተኛ ጉልበት የሚያመነጨው የአየር ተርባይን ማስነሻ (Air Turbine Starter) ነው።"
+                    },
+                    {
+                        q: "The winding in the starter-generator is used to develop the low-speed, high starting torque necessary to crank the engine:",
+                        options:["Series", "Shunt", "Both", "Parallel"],
+                        correct: 0,
+                        exp: "ስታርተር-ጄኔሬተር እንደ ማስነሻ ሆኖ ሲሰራ፣ ከፍተኛ ጉልበት ለማውጣት 'Series' ዊንዲንግ (Winding) ይጠቀማል።"
+                    },
+                    {
+                        q: "Which starter is used for small gas turbine engine?",
+                        options:["Electrical motor", "Air impingement starter", "Gas turbine starter", "Pneumatic starter"],
+                        correct: 0,
+                        exp: "ለትናንሽ የጋዝ ተርባይን ሞተሮች ኤሌክትሪክ ማስነሻ (Electrical Motor) በብዛት ጥቅም ላይ ይውላል።"
+                    },
+                    {
+                        q: "Safety feature used in an air turbine starter to prevent from over speed conditions is:",
+                        options:["Drive shaft shear section", "Pressure regulating valve", "Clutch mechanism", "Relief valve"],
+                        correct: 0,
+                        exp: "ስታርተሩ ፍጥነቱ ከቁጥጥር ውጪ ከሆነ (Over-speed)፣ ዋናው ሞተር ላይ ጉዳት እንዳያደርስ መሃል ላይ ያለው ዘንግ (Shear section) ራሱን ቆርጦ ይገነጠላል።"
+                    },
+                    {
+                        q: "At approximately what speed is the starter disconnected after starting the engine?",
+                        options:["60% of N2", "30% of N1", "60% of N1", "100% of N2"],
+                        correct: 0,
+                        exp: "የውስጠኛው ሞተር (N2) ፍጥነት በግምት ከ 55% - 60% ሲደርስ ሞተሩ ራሱን ችሎ መሽከርከር ስለሚችል ማስነሻው (Starter) ይቋረጣል።"
+                    },
+                    {
+                        q: "The source of air commonly used to start an engine in a jet transport aircraft is supplied from:",
+                        options:["Auxiliary Power Unit (APU)", "Compressor Bleed air", "Ground power unit", "Battery"],
+                        correct: 0,
+                        exp: "በመንገደኞች አውሮፕላን ላይ ሞተርን ለማስነሳት አየር በዋናነት የሚገኘው በጭራው በኩል ካለው የኤፒዩ (APU) ሞተር ነው።"
+                    },
+                    {
+                        q: "____ start is start where turbine or exhaust gas temperature limits are exceeded.",
+                        options: ["Hot", "Hung", "Wet", "Cold"],
+                        correct: 0,
+                        exp: "ሆት ስታርት (Hot start) ማለት ሞተሩ አየር እያጠረው ነዳጅ በብዛት ሲቃጠል የሚፈጠር እና ከተፈቀደው የሙቀት (EGT) መጠን በላይ ሲያልፍ የሚፈጠር አደገኛ ክስተት ነው።"
+                    },
+                    {
+                        q: "Which one of the following starter is permanently engaged with the engine?",
+                        options:["Starter generator", "Direct cranking", "Air turbine starter", "Cartridge starter"],
+                        correct: 0,
+                        exp: "ስታርተር-ጄኔሬተር ሞተሩን ካስነሳ በኋላ እንደ ኤሌክትሪክ አመንጪ (Generator) ሆኖ ስለሚቀጥል ከሞተሩ ጋር በቋሚነት የተያያዘ (Permanently engaged) ነው።"
+                    },
+                    {
+                        q: "In troubleshooting, the possible cause for long interval between sparks created by the igniter plug is the:",
+                        options:["Power supply", "Igniter plug", "Transformer Unit", "Exciter Box"],
+                        correct: 0,
+                        exp: "የኃይል አቅርቦቱ (Battery) ከደከመ፣ ካፓሲተሩ ኃይል አከማችቶ ለመተፋት ረጅም ጊዜ ስለሚወስድበት በብልጭታዎቹ መካከል ያለው የጊዜ ቆይታ ይረዝማል።"
+                    },
+                    {
+                        q: "What is the component that changes DC power to high voltage AC power on GTE?",
+                        options:["Exciter", "Igniter", "Magneto", "Tachometer"],
+                        correct: 0,
+                        exp: "የማቀጣጠያው ኤክሳይተር (Exciter) ዝቅተኛ የዲሲ ኃይልን ተቀብሎ ወደ ከፍተኛ ቮልቴጅ በመቀየር ብልጭታ እንዲፈጠር ያደርጋል።"
+                    },
+                    {
+                        q: "Which of the following is NOT true about auto ignition system?",
+                        options:["Used during engine start only as a failsafe", "Serves as a backup during takeoff and landing", "Used for flight conditions in which the engine could flameout", "Automatically activates upon pressure drop"],
+                        correct: 0,
+                        exp: "አውቶ-ኢግኒሽን (Auto-ignition) የሚሰራው ሞተር በማስነሳት ሒደት ብቻ ሳይሆን፣ አውሮፕላኑ አየር ላይ በረዶ ወይም ክፉ አየር ውስጥ ሲገባ ሞተር እንዳይጠፋ ለመከላከል ጭምር ነው።"
+                    },
+                    {
+                        q: "One is NOT TRUE regarding ignition system check/test:",
+                        options:["Can be carried out inside the hangar or when flammable vapors are present", "Never be carried out on a fuel-wetted engine", "It should never be done when fueling the aircraft", "Ensure circuit breaker is pulled before maintenance"],
+                        correct: 0,
+                        exp: "ማቀጣጠያን መፈተሽ (Ignition Check) ኃይለኛ እሳት ስለሚፈጥር በሃንጋር ውስጥ ወይም ነዳጅ በሚሸትበት (Flammable vapors) ቦታ ፈጽሞ የተከለከለ ነው (እሳት እንዳያስነሳ)!"
+                    }
+                ]
+            },
+            {
+                title: "Exam 3: Engine Control & Indication System",
+                questions:[
+                    {
+                        q: "Which one of the following Engine parameter is in the EICAS Primary display?",
+                        options: ["Exhaust Gas Temperature (EGT)", "Vibration", "Oil Pressure", "Oil Temperature"],
+                        correct: 0,
+                        exp: "EGT የሞተሩን ጤንነት ከሚያሳዩ እና ከተበላሸ ሞተሩን ሊያቀልጡ ከሚችሉ ዋነኛ (Primary) መለኪያዎች አንዱ ስለሆነ ሁልጊዜም በዋናው ስክሪን ላይ ይታያል።"
+                    },
+                    {
+                        q: "Among subsystems of gas turbine engine indicating system that provides a real-time indication of engine vibration levels is:",
+                        options:["The AVM system of the engine", "Low pressure rotor tachometer (N1)", "High pressure rotor tachometer (N2)", "EGT system"],
+                        correct: 0,
+                        exp: "የ AVM (Airborne Vibration Monitoring) ሲስተም የሞተሩን መንቀጥቀጥ ወይም ንዝረት በቀጥታ የሚያሳውቅ መለኪያ ነው።"
+                    },
+                    {
+                        q: "Which one of the following parameters is not displayed in engine primary display?",
+                        options: ["N2", "EGT", "N1", "EPR"],
+                        correct: 0,
+                        exp: "በአብዛኛው ዘመናዊ አውሮፕላኖች ላይ (እንደ ቦይንግ 737) N1 እና EGT በዋናው ስክሪን (Primary) ላይ ሲሆኑ፣ N2 ግን በታችኛው/ሁለተኛ ደረጃ (Secondary) ስክሪን ላይ ይታያል።"
+                    },
+                    {
+                        q: "What is the first engine instrument indication for a successful start of a turbine engine?",
+                        options:["A rise in the exhaust gas temperature.", "Rise in the engine fuel flow.", "A fall in oil pressure.", "Rise in N1 speed."],
+                        correct: 0,
+                        exp: "ነዳጅ እና ብልጭታ ከተገናኙ በኋላ እሳት መያዙን (Light-off) በግልፅ የሚያሳየው የመጀመሪያው ምልክት የ EGT (የጭስ ሙቀት) በፍጥነት ከፍ ማለት ነው።"
+                    },
+                    {
+                        q: "The VM system of gas turbine engine displays the vibration level on:",
+                        options:["Secondary EICAS display", "Primary flight Display", "Primary EICAS display", "Navigation display"],
+                        correct: 0,
+                        exp: "የንዝረት መለኪያ (Vibration level) በአብዛኛው ከሌሎች እንደ ዘይት ግፊት እና ሙቀት ጋር በመሆን በሁለተኛው (Secondary EICAS display) ስክሪን ላይ ይታያል።"
+                    },
+                    {
+                        q: "High energy system produces high current by Storing electrons in the:",
+                        options: ["Capacitor", "Pi-filter", "Trigger transformer", "Igniter plug"],
+                        correct: 0,
+                        exp: "ዘመናዊ ማቀጣጠያዎች ኤሌክትሪክን በካፓሲተር (Capacitor) ውስጥ አከማችተው በድንገት እና በከፍተኛ ኃይል ይለቁታል።"
+                    },
+                    {
+                        q: "To avoid shock from GTC ignition sys, the technician must wait at least 5 min after engine Shutdown.",
+                        options: ["True", "False"],
+                        correct: 0,
+                        exp: "አዎ (True)! ሲስተሙ ቢጠፋም በካፓሲተሩ ውስጥ የቀረ ገዳይ ቮልቴጅ ስለሚኖር፣ ኤሌክትሪኩ ወደ መሬት እስኪፈስ ቢያንስ 5 ደቂቃ መጠበቅ ግዴታ ነው።"
+                    },
+                    {
+                        q: "An engine tachometer indicates RPM.",
+                        options: ["True", "False"],
+                        correct: 0,
+                        exp: "አዎ (True)! ታኮሜትር (Tachometer) የሞተርን የማሽከርከር ፍጥነት በ % RPM የሚለካ መሣሪያ ነው።"
+                    },
+                    {
+                        q: "Radioactive materials can be found on:",
+                        options: ["Exciters", "Fuel nozzles", "Compressor blades", "Turbine blades"],
+                        correct: 0,
+                        exp: "አንዳንድ የድሮ ማቀጣጠያ ኤክሳይተሮች ውስጥ የጋዝ አዮናይዜሽንን ለማገዝ አነስተኛ መጠን ያለው ራዲዮአክቲቭ (Radioactive) ማቴሪያል ይገኛል።"
+                    },
+                    {
+                        q: "Sequence of starting:",
+                        options:["Air-Ignition-Fuel", "Fuel-Air-Ignition", "Air-Fuel-Ignition", "Ignition-Fuel-Air"],
+                        correct: 0,
+                        exp: "የማስነሳት ትክክለኛ ቅደም ተከተል፡ መጀመሪያ ሞተር በአየር ይሽከረከራል (Air)، ከዚያ ማቀጣጠያው ይበራል (Ignition)، በመጨረሻ ነዳጅ (Fuel) ይገባል።"
+                    },
+                    {
+                        q: "Which control system energize the ignition system and to initiate the flow of fuel to the engine?",
+                        options:["Start Control System", "Thrust Reverser Control System", "Thrust Control System", "Pneumatic Control System"],
+                        correct: 0,
+                        exp: "የማስነሻ መቆጣጠሪያው (Start Control Lever) ነዳጅ እና ኤሌክትሪክ ለማቀጣጠያው እንዲላክ የሚያዝበት ነው።"
+                    }
+                ]
+            },
+            {
+                title: "Exam 4: M3 Advanced Concepts (PP 2.3)",
+                questions:[
+                    {
+                        q: "What is the function of a Tachometer?",
+                        options:["Indication of RPM", "Vibration indication", "Signal processing", "Measuring EGT"],
+                        correct: 0,
+                        exp: "ታኮሜትር (Tachometer) ማለት የሞተሩን አብዮት በደቂቃ (RPM - Revolutions Per Minute) የሚለካ መሣሪያ ነው።"
+                    },
+                    {
+                        q: "One of the following does NOT give input for the Airborne Vibration Monitoring System:",
+                        options:["EGT", "Number 1 bearing vibration sensor", "Fan frame compressor case vertical vibration (FFCCVV) sensor", "Turbine casing sensor"],
+                        correct: 0,
+                        exp: "EGT (የጭስ ሙቀት) የሙቀት መጠንን የሚለካ እንጂ የንዝረት (Vibration) ሴንሰር ባለመሆኑ ለ AVM መረጃ አይሰጥም።"
+                    },
+                    {
+                        q: "Which type of engine needs a high-energy spark?",
+                        options:["Turbine engine", "Turboprop reciprocating engine", "Piston engine", "Automobile engine"],
+                        correct: 0,
+                        exp: "ተርባይን ሞተር (Turbine engine) ውስጥ ቀዝቃዛ አየር በፍጥነት ስለሚነፍስ፣ ነዳጁን ለማቀጣጠል ከፒስተን ሞተር የተለየ እጅግ ከፍተኛ ኃይል (High-energy spark) ይፈልጋል።"
+                    },
+                    {
+                        q: "To avoid a severe electrical shock, no component in a turbine engine ignition system should be touched for at least:",
+                        options:["5 minutes after the system is turned off", "60 minutes after the system is turned off", "20 minutes after the system is turned off", "1 minute after the system is turned off"],
+                        correct: 0,
+                        exp: "አደገኛ የኤሌክትሪክ ንዝረትን ለማስቀረት፣ ሲስተሙ ከጠፋ በኋላ በካፓሲተሩ ላይ ያለውን ኃይል ወደ መሬት ለማፍሰስ (Bleed off) ቢያንስ 5 ደቂቃ መጠበቅ ህግ ነው።"
+                    },
+                    {
+                        q: "In a high energy Igniter unit, the discharge resistors:",
+                        options:["Allow the capacitor to discharge when the unit is switched off", "Prolongs the discharge", "Allow sufficient energy to be stored in the capacitor", "Increase the voltage of the spark"],
+                        correct: 0,
+                        exp: "የመልቀቂያ (Discharge/Bleeder) ሬዚስተሮች፣ ሲስተሙ ሲጠፋ በካፓሲተሩ ውስጥ ቀርቶ የነበረውን ገዳይ ቮልቴጅ በደህንነት ወደ መሬት በማስለቀቅ ሰው እንዳይጎዳ ይከላከላሉ።"
+                    },
+                    {
+                        q: "Interference with electronic equipment installed in the aircraft by the electromagnetic energy generated in the ignition exciter is prevented by:",
+                        options:["Pi-filter", "Capacitor", "Trigger transformer", "Diode"],
+                        correct: 0,
+                        exp: "የ ፓይ-ማጣሪያ (Pi-filter) ከፍተኛ ቮልቴጁ የሚፈጥረውን የኤሌክትሮማግኔቲክ ሞገድ (Noise) አጣርቶ በማስቀረት የአውሮፕላኑን ሬዲዮ እና ኮምፒውተሮች እንዳይረበሹ ይከላከላል።"
+                    },
+                    {
+                        q: "Why does the starter for dual spool turbine engine rotate the HP compressor?",
+                        options:["Less weight to start", "Easy for connecting the starter", "Closer to the combustion chamber", "To cool the engine faster"],
+                        correct: 0,
+                        exp: "በዱዋል-ስፑል (Dual spool) ሞተር ላይ፣ ትልቁን ደጋፊ ከማሽከርከር ይልቅ የውስጠኛውን ትንሽ ዘንግ (N2/HP compressor) ብቻ ማሽከርከር ክብደት ስለሚቀንስ አነስተኛ ጉልበት ይፈልጋል።"
+                    },
+                    {
+                        q: "When does a hung start occur?",
+                        options:["Engine fails to reach Idle speed", "Starter Failed to disengage", "Engine passing Idle speed", "Starter not working"],
+                        correct: 0,
+                        exp: "ሃንግ ስታርት (Hung start) ማለት ሞተሩ እሳት ከያዘ በኋላ አቅም አጥቶ ትክክለኛው መነሻ ፍጥነቱ (Idle speed) ላይ መድረስ ሲያቅተውና በመሃል ሲንጠለጠል ነው።"
+                    },
+                    {
+                        q: "Which one is not among the basic type of engine control systems?",
+                        options: ["Wireless", "Push-pull", "Cable and pulley", "Fly-by-wire"],
+                        correct: 0,
+                        exp: "እስካሁን ባለው አቪዬሽን ሞተርን ለመቆጣጠር በገመድ አልባ (Wireless) ቴክኖሎጂ አንጠቀምም። (ደህንነቱ አስተማማኝ ስላልሆነ)።"
+                    },
+                    {
+                        q: "What causes hot start?",
+                        options:["Fuel rich starting / Residual fuel", "Cold weather condition", "High air pressure from APU", "Fast spinning of starter"],
+                        correct: 0,
+                        exp: "ሆት ስታርት (Hot start) የሚፈጠረው ሞተሩ ውስጥ በቂ አየር ሳይኖር ቀርቶ (ወይም ትርፍ ነዳጅ ኖሮ) ሲነሳ ነው። አየሩ ማቀዝቀዝ ስለማይችል ሙቀቱ (EGT) ጣሪያ ይነካል።"
+                    }
+                ]
+            }
+        ];
+
+        let currentExamIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = -1;
+
+        // Initialize the Home Page
+        function init() {
+            const listContainer = document.getElementById('exam-list-container');
+            listContainer.innerHTML = '';
+            
+            examsData.forEach((exam, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = exam.title;
+                btn.onclick = () => startExam(index);
+                listContainer.appendChild(btn);
+            });
+        }
+
+        // Start an Exam
+        function startExam(index) {
+            currentExamIndex = index;
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            
+            document.getElementById('quiz-title').innerText = examsData[index].title;
+            
+            renderQuestion();
+        }
+
+        // Render current question
+        function renderQuestion() {
+            const exam = examsData[currentExamIndex];
+            const qData = exam.questions[currentQuestionIndex];
+            selectedOption = -1;
+
+            document.getElementById('progress-indicator').innerText = `Question ${currentQuestionIndex + 1} of ${exam.questions.length}`;
+            document.getElementById('question-text').innerText = qData.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            qData.options.forEach((opt, idx) => {
+                const optDiv = document.createElement('div');
+                optDiv.className = 'option';
+                optDiv.innerText = `${String.fromCharCode(65 + idx)}) ${opt}`;
+                optDiv.onclick = () => selectOption(idx, optDiv);
+                optionsContainer.appendChild(optDiv);
+            });
+
+            document.getElementById('submit-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('explanation-container').classList.add('hidden');
+            document.getElementById('submit-btn').disabled = true;
+        }
+
+        // Handle option selection
+        function selectOption(index, element) {
+            // If already submitted, prevent changing
+            if(!document.getElementById('submit-btn').classList.contains('hidden') === false) return;
+
+            selectedOption = index;
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('submit-btn').disabled = false;
+        }
+
+        // Submit the answer and show feedback/explanation
+        function submitAnswer() {
+            if (selectedOption === -1) return;
+
+            const exam = examsData[currentExamIndex];
+            const qData = exam.questions[currentQuestionIndex];
+            const allOptions = document.querySelectorAll('.option');
+
+            // Highlight Correct and Incorrect
+            allOptions.forEach((opt, idx) => {
+                if (idx === qData.correct) {
+                    opt.classList.add('correct');
+                } else if (idx === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+                opt.style.pointerEvents = 'none'; // Disable further clicking
+            });
+
+            if (selectedOption === qData.correct) {
+                score++;
+            }
+
+            // Show explanation
+            document.getElementById('explanation-text').innerText = qData.exp;
+            document.getElementById('explanation-container').classList.remove('hidden');
+
+            // Toggle buttons
+            document.getElementById('submit-btn').classList.add('hidden');
+            
+            if (currentQuestionIndex < exam.questions.length - 1) {
+                document.getElementById('next-btn').innerText = "Next Question";
+            } else {
+                document.getElementById('next-btn').innerText = "Show Results";
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        // Move to next question or end exam
+        function nextQuestion() {
+            const exam = examsData[currentExamIndex];
+            if (currentQuestionIndex < exam.questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Show final score
+        function showResults() {
+            document.getElementById('quiz-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            
+            const exam = examsData[currentExamIndex];
+            document.getElementById('final-score').innerText = `${score} / ${exam.questions.length}`;
+        }
+
+        // Restart current exam
+        function restartExam() {
+            startExam(currentExamIndex);
+        }
+
+        // Back to Home page
+        function backToHome() {
+            document.getElementById('quiz-page').classList.add('hidden');
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('home-page').classList.remove('hidden');
+        }
+
+        // Initialize App
+        init();
+    </script>
+</body>
+</html>
