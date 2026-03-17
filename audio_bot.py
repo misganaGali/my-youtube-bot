@@ -1,51 +1,27 @@
 import telebot
-import yt_dlp
-import os
+import schedule
+import time
+import random
 
-# የቦት ቶከንህ
 TOKEN = '8693813296:AAHWde9efzDl3cCVaV5bULkibSi2l-N9n0I'
 bot = telebot.TeleBot(TOKEN)
+USER_ID = 'ያለህን_ቁጥር_አስገባ' # የመነሳሻ መልዕክት የሚደርስበት ሰው አይዲ
 
-def download_audio_from_youtube(url):
-    # yt-dlp ማዋቀር
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': 'audio_file.%(ext)s',
-        'nocheckcertificate': True, # የደህንነት ሰርቲፊኬት እንዳያግደው
-    }
-    
-    # ቪዲዮውን ማውረድ
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-    return 'audio_file.mp3'
+quotes = [
+    "ጠዋት፡ ዛሬ አዲስ እድል ነው! አንድ ገጽ በማንበብ ጀምረው።",
+    "ጠዋት፡ እውቀት ኃይል ነው፤ ዛሬ የሆነ አዲስ ነገር ተማር።",
+    "ማታ፡ ዛሬ ምን አሳካህ? ለራስህ ክብር ስጥ።",
+    "ማታ፡ እረፍት አድርግ፣ ነገ አዲስ ጀብዱ ይጠብቅሃል!"
+]
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.reply_to(message, "ሰላም! የዩቲዩብ ሊንክ ላኩልኝ፣ ወደ MP3 ቀይሬ እልክላችኋለሁ።")
+def send_motivation():
+    quote = random.choice(quotes)
+    bot.send_message(USER_ID, quote)
 
-@bot.message_handler(func=lambda message: True)
-def process_link(message):
-    url = message.text
-    if "youtube.com" in url or "youtu.be" in url:
-        try:
-            bot.reply_to(message, "እባክዎ ይጠብቁ፣ እየቀየርኩ ነው... ⏳")
-            audio_path = download_audio_from_youtube(url)
-            
-            # ፋይሉን ወደ ቴሌግራም መላክ
-            with open(audio_path, 'rb') as f:
-                bot.send_audio(message.chat.id, f)
-            
-            # ፋይሉን መሰረዝ
-            os.remove(audio_path)
-        except Exception as e:
-            bot.reply_to(message, f"ስህተት ተፈጥሯል፡ {str(e)}")
-    else:
-        bot.reply_to(message, "እባክዎ ትክክለኛ የዩቲዩብ ሊንክ ይላኩ።")
+# ፕሮግራሙ እንዲሰራ መርሐግብር ማውጣት
+schedule.every().day.at("06:00").do(send_motivation)
+schedule.every().day.at("21:00").do(send_motivation)
 
-print("ቦቱ እየሰራ ነው...")
-bot.polling(none_stop=True)
+while True:
+    schedule.run_pending()
+    time.sleep(1)
