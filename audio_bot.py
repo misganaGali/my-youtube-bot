@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 
 TOKEN = '8693813296:AAHWde9efzDl3cCVaV5bULkibSi2l-N9n0I'
-ADMIN_ID = 'ያንተ_አይዲ' # የአድሚን አይዲህ
+ADMIN_ID = '442843505' # የአድሚን አይዲህ
 bot = telebot.TeleBot(TOKEN)
 
 # ዋናው ሜኑ
